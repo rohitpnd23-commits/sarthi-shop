@@ -1,44 +1,167 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sarthi Shop - Pro with Orders</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script></head>
-<body class="bg-[#eaeded]">
-<div class="max-w-[430px] mx-auto bg-white min-h-screen shadow-2xl flex flex-col relative">
-<div class="bg-[#131921] text-white p-3 flex items-center gap-2 sticky top-0 z-50">
-<div class="font-black text-[16px]"><span class="text-[#febd69]">Sarthi</span> Shop</div>
-<div class="flex-1 bg-white rounded flex overflow-hidden ml-2"><input id="searchInput" oninput="render()" placeholder="Search" class="flex-1 text-black px-2 py-2 text-xs outline-none"><button class="bg-[#febd69] px-2">🔍</button></div>
-<div onclick="openCart()" class="relative ml-1">🛒<span id="cartCount" class="absolute -top-1 -right-1 bg-orange-400 text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></div>
-<div onclick="openAuth()" id="loginBtn" class="ml-1 text-[9px] bg-white text-black px-2 py-1 rounded font-black">Login</div>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sarthi Shop - Customer</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffb26b">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fffefc;color:#111}
+.top{padding:14px 16px;background:#111;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.top b{font-size:18px}.cart{position:relative;background:#ffb26b;color:#000;padding:8px 14px;border-radius:20px;font-weight:700;border:none}
+.cart i{position:absolute;top:-6px;right:-6px;background:red;color:#fff;font-size:11px;padding:2px 6px;border-radius:10px}
+.search{margin:12px 16px;display:flex;gap:8px}
+.search input{flex:1;padding:12px 16px;border-radius:25px;border:1px solid #ddd;background:#f5f5f5}
+.cat{display:flex;gap:10px;padding:0 16px;overflow:auto}
+.cat span{padding:8px 16px;background:#f0f0f0;border-radius:20px;font-size:13px;white-space:nowrap;cursor:pointer}.cat .on{background:#111;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.card{border:1px solid #eee;border-radius:16px;overflow:hidden;background:#fff}
+.card img{width:100%;height:140px;object-fit:cover}
+.card .info{padding:10px}.price{font-weight:800;margin-top:4px}.vendor{font-size:11px;color:#888}
+.btn2{width:100%;margin-top:8px;padding:8px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0}
+.nav span{font-size:11px;text-align:center;color:#999;cursor:pointer;padding:6px 16px}.on{color:#111!important;font-weight:700}
+.page{padding-bottom:80px}.hidden{display:none}
+.detail img{width:100%;height:320px;object-fit:cover}
+.detailBox{padding:16px}.big{font-size:22px;font-weight:800}
+.cartItem{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #eee}
+.cartItem img{width:60px;height:60px;border-radius:10px;object-fit:cover}
+</style>
+</head>
+<body>
+<div class="top"><b>🛍️ Sarthi Shop</b><button class="cart" onclick="tab('cart')">🛒 Cart <i id="cartCount">0</i></button></div>
+
+<!-- HOME -->
+<div id="p-home" class="page">
+<div class="search"><input placeholder="Search Kurta, Saree..."><span style="background:#111;color:#fff;padding:12px 16px;border-radius:25px">🔍</span></div>
+<div class="cat"><span class="on" onclick="filterCat('All')">All</span><span onclick="filterCat('Kurta')">Kurta</span><span onclick="filterCat('Saree')">Saree</span><span onclick="filterCat('T-Shirt')">T-Shirt</span><span onclick="filterCat('Bag')">Bag</span></div>
+<div style="padding:12px 16px;display:flex;justify-content:space-between"><b>New Arrivals</b><small style="color:#ffb26b" id="vendorNote">Vendor Products Live ✨</small></div>
+<div class="grid" id="grid"></div>
 </div>
-<div id="userBar" class="bg-[#232f3e] text-white px-3 py-1.5 text-[10px] flex justify-between hidden"><span id="userInfo"></span><span class="flex gap-2"><span onclick="openOrders()" class="underline">My Orders</span><span onclick="logout()" class="underline">Logout</span></span></div>
-<div class="flex gap-2 overflow-x-auto p-2 bg-white text-[11px] font-bold"><button onclick="filterCat('All')" class="bg-black text-white px-3 py-1 rounded-full">All</button><button onclick="filterCat('Fashion')" class="border px-3 py-1 rounded-full">Fashion</button><button onclick="filterCat('Mobiles')" class="border px-3 py-1 rounded-full">Mobiles</button><button onclick="filterCat('Electronics')" class="border px-3 py-1 rounded-full">Electronics</button></div>
-<div id="productGrid" class="grid grid-cols-2 gap-2 p-2 bg-[#eaeded] flex-1 overflow-y-auto"></div>
-<div id="authModal" class="hidden absolute inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"><div class="bg-white rounded-[16px] w-full p-5"><div class="flex justify-between"><h2 id="authTitle" class="font-black text-xl">Login</h2><button onclick="closeAuth()">✕</button></div><div class="mt-4 space-y-3"><input id="authName" placeholder="Full Name" class="w-full border rounded-lg px-3 py-3 text-sm hidden"><input id="authEmail" placeholder="Email" class="w-full border rounded-lg px-3 py-3 text-sm"><input id="authPass" type="password" placeholder="Password" class="w-full border rounded-lg px-3 py-3 text-sm"><button onclick="handleAuth()" id="authBtn" class="w-full bg-[#ffd814] py-3 rounded-lg font-black border">Login</button><p class="text-xs text-center"><span id="authSwitchText">New user?</span> <span onclick="toggleAuth()" class="text-blue-600 font-bold" id="authSwitchBtn">Create Account</span></p><p id="authError" class="text-red-600 text-xs hidden"></p></div></div></div>
-<div id="cartSheet" class="hidden absolute inset-0 bg-black/60 z-50 flex flex-col justify-end"><div class="bg-white rounded-t-[20px] max-h-[90vh] flex flex-col"><div class="p-4 flex justify-between border-b"><h2 class="font-black">Cart</h2><button onclick="closeCart()">✕</button></div><div id="cartItems" class="flex-1 overflow-y-auto p-3 space-y-2"></div><div class="p-4 border-t"><div class="flex gap-2"><label class="flex-1 border-2 border-green-600 bg-green-50 rounded p-2 text-xs font-bold"><input type="radio" name="pay" value="COD" checked> COD</label><label class="flex-1 border rounded p-2 text-xs font-bold"><input type="radio" name="pay" value="UPI"> UPI</label></div><div class="flex justify-between font-black mt-3"><span>Total</span><span id="cartTotal">₹0</span></div><button onclick="placeOrder()" class="w-full bg-[#ffd814] py-3 rounded-lg font-black mt-3">Place Order</button></div></div></div>
-<div id="ordersPage" class="hidden absolute inset-0 bg-[#eaeded] z-[55] flex flex-col"><div class="bg-[#131921] text-white p-3 flex justify-between"><h2 class="font-black">My Orders</h2><button onclick="closeOrders()" class="bg-white text-black px-2 rounded text-xs">✕ Close</button></div><div id="ordersList" class="flex-1 overflow-y-auto p-3 space-y-3"></div></div>
-<div id="success" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl">✅</div><h1 class="font-black text-2xl mt-3">Order Placed!</h1><p id="orderInfo" class="text-sm mt-2 whitespace-pre-line"></p><button onclick="openOrdersFromSuccess()" class="w-full bg-black text-white py-3 rounded-full font-black mt-6">View My Orders</button><button onclick="location.reload()" class="w-full bg-[#ffd814] py-3 rounded-full font-black mt-2">Continue Shopping</button></div>
+
+<!-- PRODUCT DETAIL -->
+<div id="p-detail" class="page hidden">
+<div class="detail"><img id="dimg"><div class="detailBox"><h2 id="dname"></h2><p id="dvendor" class="vendor"></p><p class="big" id="dprice"></p><p style="margin-top:10px;color:#555;font-size:14px">Premium quality. Cash on Delivery available. 7 days return. Sold by trusted vendor.</p><button class="btn2" style="padding:14px;margin-top:16px;font-size:16px" onclick="addToCart()">Add to Cart - Buy Now</button><button style="width:100%;margin-top:10px;padding:12px;background:#fff;border:1px solid #111;border-radius:8px" onclick="tab('home')">← Back to Shop</button></div></div>
 </div>
+
+<!-- CART -->
+<div id="p-cart" class="page hidden">
+<h2 style="padding:16px">My Cart</h2>
+<div id="cartList"></div>
+<div id="cartTotal" style="padding:16px"></div>
+<button id="checkoutBtn" class="hidden" style="margin:16px;width:calc(100% - 32px);padding:14px;background:#ffb26b;border:none;border-radius:12px;font-weight:800" onclick="checkout()">Checkout ₹<span id="totalAmt">0</span></button>
+</div>
+
+<!-- PROFILE -->
+<div id="p-profile" class="page hidden">
+<div style="padding:16px"><h2>My Account</h2><div style="margin-top:20px;background:#f5f5f5;padding:16px;border-radius:16px"><b>Rohit Pandey</b><br><small>rohit@gmail.com</small><br><br><b>My Orders</b><br><small>2 orders delivered</small></div></div>
+</div>
+
+<div class="nav">
+<span id="n-home" class="on" onclick="tab('home')">🏠<br>Home</span>
+<span id="n-cart" onclick="tab('cart')">🛒<br>Cart</span>
+<span id="n-profile" onclick="tab('profile')">👤<br>Profile</span>
+</div>
+
 <script>
-//... same JS as previous (products, cart, auth, orders)...
-const supa=supabase.createClient("https://nmjrsalsaeaoptyafef.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tanJzYWxzYWVhb3B0eXlhZmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzE3MjEsImV4cCI6MjEwNjk0NzcyMX0.oRbBm1Vew7DgM88hSDmhL9aie0m_ORkxPmChUXyckEQ");
-const products=[{id:1,name:"Men T-Shirt Combo",price:499,mrp:1299,cat:"Fashion",img:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",rating:4.3},{id:2,name:"Wireless Earbuds",price:1199,mrp:2999,cat:"Electronics",img:"https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400",rating:4.5},{id:3,name:"Phone Cover",price:199,mrp:599,cat:"Mobiles",img:"https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400",rating:4.2},{id:4,name:"Kitchen Box",price:599,mrp:1499,cat:"Home",img:"https://images.unsplash.com/photo-1584305574586-0a916646b47a?w=400",rating:4.1},{id:5,name:"Running Shoes",price:1899,mrp:3999,cat:"Fashion",img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",rating:4.6},{id:6,name:"Smart Watch",price:2499,mrp:5999,cat:"Electronics",img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",rating:4.4}];
-let cart=JSON.parse(localStorage.getItem('sarthiCart')||'[]');let cat='All';let isLogin=true;let currentUser=JSON.parse(localStorage.getItem('sarthiUser')||'null');let myOrders=JSON.parse(localStorage.getItem('sarthiOrders')||'[]');
-function updateUserBar(){let bar=document.getElementById('userBar');let btn=document.getElementById('loginBtn');if(currentUser){bar.classList.remove('hidden');document.getElementById('userInfo').innerText=`Hello, ${currentUser.name}`;btn.innerText='Logout';btn.onclick=logout;}else{bar.classList.add('hidden');btn.innerText='Login';btn.onclick=openAuth;}}
-function render(){let q=document.getElementById('searchInput').value.toLowerCase();let f=products.filter(p=>(cat==='All'||p.cat===cat)&&p.name.toLowerCase().includes(q));document.getElementById('productGrid').innerHTML=f.map(p=>`<div class="bg-white rounded-lg p-2"><img src="${p.img}" class="w-full h-24 object-contain bg-gray-50"><p class="text-xs mt-1 h-8">${p.name}</p><p class="text-[10px] text-green-700">⭐ ${p.rating}</p><div class="flex gap-1"><span class="font-black text-sm">₹${p.price}</span><span class="text-xs line-through text-gray-400">₹${p.mrp}</span></div><button onclick="addCart(${p.id})" class="w-full bg-[#ffd814] rounded-full py-1.5 text-xs font-bold mt-2 border">Add to Cart</button></div>`).join('');document.getElementById('cartCount').innerText=cart.reduce((s,c)=>s+c.qty,0);updateUserBar();}
-function addCart(id){let e=cart.find(c=>c.id===id);if(e)e.qty++;else{let p=products.find(x=>x.id===id);cart.push({...p,qty:1});}localStorage.setItem('sarthiCart',JSON.stringify(cart));render();openCart();}
-function openCart(){if(!currentUser){openAuth();return;}document.getElementById('cartSheet').classList.remove('hidden');let div=document.getElementById('cartItems');if(cart.length==0){div.innerHTML='<p class="text-center py-10">Empty</p>';return;}div.innerHTML=cart.map(c=>`<div class="flex gap-2 bg-gray-50 p-2 rounded"><img src="${c.img}" class="w-14 h-14 bg-white"><div class="flex-1"><p class="text-xs font-bold">${c.name}</p><p class="text-xs">Qty:${c.qty}</p><button onclick="chg(${c.id},-1)" class="border px-2">-</button><button onclick="chg(${c.id},1)" class="border px-2 ml-1">+</button></div><p class="font-bold">₹${c.price*c.qty}</p></div>`).join('');document.getElementById('cartTotal').innerText='₹'+cart.reduce((s,c)=>s+c.price*c.qty,0);}
-function closeCart(){document.getElementById('cartSheet').classList.add('hidden');}
-function chg(id,d){let it=cart.find(c=>c.id===id);it.qty+=d;if(it.qty<=0)cart=cart.filter(c=>c.id!==id);localStorage.setItem('sarthiCart',JSON.stringify(cart));render();openCart();}
-function filterCat(c){cat=c;render();}
-function openAuth(){document.getElementById('authModal').classList.remove('hidden');}
-function closeAuth(){document.getElementById('authModal').classList.add('hidden');}
-function toggleAuth(){isLogin=!isLogin;document.getElementById('authTitle').innerText=isLogin?'Login':'Signup';document.getElementById('authBtn').innerText=isLogin?'Login':'Create Account';document.getElementById('authName').classList.toggle('hidden',isLogin);document.getElementById('authSwitchText').innerText=isLogin?'New user?':'Already?';document.getElementById('authSwitchBtn').innerText=isLogin?'Create Account':'Login';}
-function handleAuth(){let email=document.getElementById('authEmail').value.trim();let pass=document.getElementById('authPass').value.trim();let name=document.getElementById('authName').value.trim();if(!email||!pass||(!isLogin&&!name)){document.getElementById('authError').innerText='Fill all';document.getElementById('authError').classList.remove('hidden');return;}if(isLogin){let users=JSON.parse(localStorage.getItem('sarthiUsers')||'[]');let u=users.find(x=>x.email===email&&x.pass===pass);if(!u){document.getElementById('authError').innerText='Invalid';document.getElementById('authError').classList.remove('hidden');return;}currentUser=u;localStorage.setItem('sarthiUser',JSON.stringify(u));}else{let users=JSON.parse(localStorage.getItem('sarthiUsers')||'[]');if(users.find(x=>x.email===email)){document.getElementById('authError').innerText='Exists';document.getElementById('authError').classList.remove('hidden');return;}let nu={name,email,pass};users.push(nu);localStorage.setItem('sarthiUsers',JSON.stringify(users));currentUser=nu;localStorage.setItem('sarthiUser',JSON.stringify(nu));}closeAuth();render();}
-function logout(){localStorage.removeItem('sarthiUser');currentUser=null;render();}
-async function placeOrder(){if(!currentUser){openAuth();return;}if(cart.length==0)return;let pay=document.querySelector('input[name="pay"]:checked').value;let oid='SAR'+Math.floor(100000+Math.random()*900000);let tot=cart.reduce((s,c)=>s+c.price*c.qty,0);let orderObj={id:oid,items:[...cart],total:tot,pay:pay,date:new Date().toLocaleString(),email:currentUser.email};myOrders.unshift(orderObj);localStorage.setItem('sarthiOrders',JSON.stringify(myOrders));try{await supa.from('sarthi_bookings').insert([{id:oid,customer_email:currentUser.email,from_address:'Shop Order '+currentUser.name,to_address:'COD '+pay,dist:cart.length+' items',fare:tot,status:'ordered_cod',vehicle_type:'shopping',from_lat:22.57,from_lng:88.36,to_lat:22.57,to_lng:88.36}]);}catch(e){}document.getElementById('orderInfo').innerText=`Order: ${oid}\nTotal: ₹${tot} - ${pay}\nUser: ${currentUser.email}`;document.getElementById('success').classList.remove('hidden');cart=[];localStorage.setItem('sarthiCart','[]');}
-function openOrders(){if(!currentUser){openAuth();return;}document.getElementById('ordersPage').classList.remove('hidden');let list=document.getElementById('ordersList');let userOrders=myOrders.filter(o=>o.email===currentUser.email);if(userOrders.length==0){list.innerHTML='<p class="text-center mt-20 text-gray-500">No orders yet</p>';return;}list.innerHTML=userOrders.map(o=>`<div class="bg-white rounded-lg p-3 shadow"><div class="flex justify-between"><span class="font-black text-xs">${o.id}</span><span class="text-[10px] bg-green-100 text-green-700 px-2 rounded">COD - ${o.pay}</span></div><p class="text-[11px] text-gray-500 mt-1">${o.date}</p><div class="mt-2 space-y-1">${o.items.map(i=>`<div class="flex gap-2 text-xs"><img src="${i.img}" class="w-10 h-10"><div><p class="font-bold">${i.name}</p><p>Qty: ${i.qty} x ₹${i.price}</p></div></div>`).join('')}</div><div class="flex justify-between font-black mt-2 border-t pt-2 text-sm"><span>Total</span><span>₹${o.total}</span></div></div>`).join('');}
-function closeOrders(){document.getElementById('ordersPage').classList.add('hidden');}
-function openOrdersFromSuccess(){document.getElementById('success').classList.add('hidden');openOrders();}
+// Default products
+let defaultProducts = [
+{name:"Silk Kurta Orange",price:1499,cat:"Kurta",img:"https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400",vendor:"Sarthi Official"},
+{name:"Cotton T-Shirt",price:899,cat:"T-Shirt",img:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",vendor:"Ramesh Traders"},
+{name:"Leather Hand Bag",price:2499,cat:"Bag",img:"https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400",vendor:"Sarthi Official"},
+{name:"Banarasi Saree",price:3499,cat:"Saree",img:"https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400",vendor:"Priya Boutique"}
+];
+
+let cart = JSON.parse(localStorage.getItem('sarthi_cart')||'[]');
+let currentProd = null;
+
+function getAllProducts(){
+  let vendorProds = JSON.parse(localStorage.getItem('sarthi_products')||'[]');
+  // Vendor products ko customer format me convert
+  let v = vendorProds.map(p=>({name:p.name, price: Number(p.price), cat:'Vendor', img:p.image, vendor: p.vendor||'Vendor'}));
+  return [...v, ...defaultProducts];
+}
+
+function render(filter='All'){
+  let all = getAllProducts();
+  if(filter!=='All') all = all.filter(p=>p.cat==filter || p.name.includes(filter));
+  grid.innerHTML = all.map((p,i)=>`
+    <div class="card" onclick='openDetail(${JSON.stringify(p).replace(/'/g,"&#39;")})'>
+      <img src="${p.img}">
+      <div class="info"><b style="font-size:13px">${p.name}</b><br><span class="vendor">${p.vendor}</span><div class="price">₹${p.price}</div><button class="btn2">View</button></div>
+    </div>
+  `).join('');
+  if(all.length==0) grid.innerHTML='<p style="grid-column:1/3;text-align:center;color:#888">No products yet. Ask vendor to upload!</p>';
+}
 render();
-</script></body></html>
+
+function openDetail(p){
+  // p string se object banao agar string hai
+  if(typeof p==='string') p=JSON.parse(p);
+  // hack for onclick
+  currentProd = p;
+  try{ currentProd = typeof p==='object'?p:JSON.parse(decodeURIComponent(p)); }catch(e){}
+  // direct call from map
+  if(!currentProd.name){ currentProd = getAllProducts().find(x=>x.name==p.name) || p; }
+  dimg.src = currentProd.img || currentProd.image;
+  dname.innerText = currentProd.name;
+  dprice.innerText = '₹'+currentProd.price;
+  dvendor.innerText = 'Sold by: '+(currentProd.vendor||'Vendor');
+  tab('detail');
+}
+// Fix for grid click
+document.getElementById('grid').addEventListener('click', e=>{
+  let card = e.target.closest('.card');
+  if(!card) return;
+  let idx = Array.from(grid.children).indexOf(card);
+  let all = getAllProducts();
+  currentProd = all[idx];
+  dimg.src = currentProd.img;
+  dname.innerText = currentProd.name;
+  dprice.innerText = '₹'+currentProd.price;
+  dvendor.innerText = 'Sold by: '+currentProd.vendor;
+  tab('detail');
+});
+
+function tab(t){
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('p-'+t).classList.remove('hidden');
+  document.querySelectorAll('.nav span').forEach(s=>s.classList.remove('on'));
+  let n = document.getElementById('n-'+t);
+  if(n) n.classList.add('on');
+  if(t=='cart') renderCart();
+}
+function filterCat(c){
+  document.querySelectorAll('.cat span').forEach(s=>s.classList.remove('on'));
+  event.target.classList.add('on');
+  render(c);
+}
+function addToCart(){
+  if(!currentProd) return;
+  cart.push(currentProd);
+  localStorage.setItem('sarthi_cart',JSON.stringify(cart));
+  updateCount();
+  alert('Added to Cart!');
+  tab('cart');
+}
+function updateCount(){ cartCount.innerText = cart.length; cartCount.style.display = cart.length?'block':'none'; }
+updateCount();
+function renderCart(){
+  if(cart.length==0){ cartList.innerHTML='<p style="text-align:center;padding:40px;color:#888">Cart Empty 🛒<br>Vendor products add karo!</p>'; checkoutBtn.classList.add('hidden'); return; }
+  let total=0;
+  cartList.innerHTML = cart.map((p,i)=>{ total+=Number(p.price); return `<div class="cartItem"><img src="${p.img||p.image}"><div><b>${p.name}</b><br><small>${p.vendor}</small><br><b>₹${p.price}</b></div><button onclick="removeCart(${i})" style="margin-left:auto;background:#ffeaea;border:none;padding:6px 10px;border-radius:8px">✕</button></div>`}).join('');
+  totalAmt.innerText = total;
+  document.getElementById('cartTotal').innerHTML = `<b>Total: ₹${total}</b>`;
+  checkoutBtn.classList.remove('hidden');
+}
+function removeCart(i){ cart.splice(i,1); localStorage.setItem('sarthi_cart',JSON.stringify(cart)); updateCount(); renderCart(); }
+function checkout(){ alert('Order Placed! Total ₹'+totalAmt.innerText+' - COD'); cart=[]; localStorage.setItem('sarthi_cart','[]'); updateCount(); tab('home'); }
+
+// Auto refresh jab vendor new product dale
+window.addEventListener('storage', ()=>render());
+setInterval(()=>render(), 2000);
+</script>
+</body>
+</html>
